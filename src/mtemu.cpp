@@ -1,10 +1,25 @@
 #include "mtemu.hpp"
+
+#include <fstream>
+#include <memory>
 #include <stdexcept>
-#include <immintrin.h>
+
+#include <x86intrin.h>
 
 namespace mtemu {
 
 MtEmuProgram::MtEmuProgram() noexcept : m_header(), m_commands() {}
+
+void MtEmuProgram::toBin(std::string pathPrefix) const {
+    char num = '1';
+    for (uint64_t i = 0; i < 5; ++i, ++num) {
+        std::ofstream output{pathPrefix + num, std::ofstream::out | std::ofstream::binary};
+        for (uint64_t command : this->m_commands) {
+            uint8_t part = (command >> (i * 8)) & 0xff;
+            output.write((char*) &part, 1);
+        }
+    }
+}
 
 } // namespace mtemu
 
@@ -26,11 +41,11 @@ std::istream& operator>>(std::istream& is, mtemu::MtEmuProgram& program) {
     uint32_t len = program.m_header.size() * mtemu::MtEmuProgram::COMMAND_SIZE;
     // aligned buffer size
     uint32_t len_ = (len % 8) ? (len + 8) & ~7u : len;
-    char* buf = new char[len_];
-    is.read(buf, len);
-    uint64_t* ptr = (uint64_t*) buf;
-    for (size_t i = 0; i < program.m_header.size(); ++i)
-        program.m_commands.push_back(ptr[i] & 0xfffffffffffful);
+    std::unique_ptr<char[]> buf(new char[len_]);
+    is.read(buf.get(), len);
+    char* ptr = buf.get();
+    for (size_t i = 0; i < len; i += mtemu::MtEmuProgram::COMMAND_SIZE)
+        program.m_commands.push_back(*(uint64_t*)(ptr + i) & 0xfffffffffffful);
     return is;
 }
 
