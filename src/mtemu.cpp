@@ -12,8 +12,8 @@ MtEmuProgram::MtEmuProgram() noexcept : m_header(), m_commands() {}
 
 void MtEmuProgram::toBin(std::string pathPrefix) const {
     char num = '1';
-    for (uint64_t i = 0; i < 5; ++i, ++num) {
-        std::ofstream output{pathPrefix + num, std::ofstream::out | std::ofstream::binary};
+    for (uint64_t i = 0; i < 6; ++i, ++num) {
+        std::ofstream output{pathPrefix + num + ".bin", std::ofstream::out | std::ofstream::binary};
         for (uint64_t command : this->m_commands) {
             uint8_t part = (command >> (i * 8)) & 0xff;
             output.write((char*) &part, 1);
