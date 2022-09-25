@@ -8,14 +8,24 @@
 
 namespace mtemu {
 
+uint8_t getPart(uint64_t command, uint64_t i) {
+    // masks for `pext r64, r64, r64` instruction on x86 processors
+    static uint64_t pextmask[] = { 0x00000000ff,   // B + D
+                                   0x0000078f00,   // A + C0 + I0-I2
+                                   0x0003700700,   // I3-I5 + I6-I8 + CA0-CA1
+                                   0x03fc000000,   // CA2-CA3 + AR0-AR4 + AR5-AR6
+                                   0x0400000000 }; // AR7 + additional fields
+    return (uint8_t) (_pext_u64(command, pextmask[i]) & 0xffu);
+}
+
 MtEmuProgram::MtEmuProgram() noexcept : m_header(), m_commands() {}
 
 void MtEmuProgram::toBin(std::string pathPrefix) const {
     char num = '1';
-    for (uint64_t i = 0; i < 6; ++i, ++num) {
+    for (uint64_t i = 0; i < 5; ++i, ++num) {
         std::ofstream output{pathPrefix + num + ".bin", std::ofstream::out | std::ofstream::binary};
         for (uint64_t command : this->m_commands) {
-            uint8_t part = (command >> (i * 8)) & 0xff;
+            uint8_t part = getPart(command, i);
             output.write((char*) &part, 1);
         }
     }
@@ -45,7 +55,7 @@ std::istream& operator>>(std::istream& is, mtemu::MtEmuProgram& program) {
     is.read(buf.get(), len);
     char* ptr = buf.get();
     for (size_t i = 0; i < len; i += mtemu::MtEmuProgram::COMMAND_SIZE)
-        program.m_commands.push_back(*(uint64_t*)(ptr + i) & 0xfffffffffffful);
+        program.m_commands.push_back(_bswap(*(uint64_t*)(ptr + i) & 0xfffffffffffful));
     return is;
 }
 
