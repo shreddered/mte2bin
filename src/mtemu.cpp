@@ -55,7 +55,7 @@ std::istream& operator>>(std::istream& is, mtemu::MtEmuProgram& program) {
     is.read(buf.get(), len);
     char* ptr = buf.get();
     for (size_t i = 0; i < len; i += mtemu::MtEmuProgram::COMMAND_SIZE)
-        program.m_commands.push_back(_bswap(*(uint64_t*)(ptr + i) & 0xfffffffffffful));
+        program.m_commands.push_back(_bswap64(*(uint64_t*)(ptr + i) & 0xfffffffffffful) >> 16);
     return is;
 }
 
