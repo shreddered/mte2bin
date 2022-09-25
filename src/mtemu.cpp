@@ -14,7 +14,7 @@ uint8_t getPart(uint64_t command, uint64_t i) {
                                    0x0000078f00,   // A + C0 + I0-I2
                                    0x0003700700,   // I3-I5 + I6-I8 + CA0-CA1
                                    0x03fc000000,   // CA2-CA3 + AR0-AR4 + AR5-AR6
-                                   0x0400000000 }; // AR7 + additional fields
+                                   0x0c00000000 }; // AR6-AR7 + additional fields
     return (uint8_t) (_pext_u64(command, pextmask[i]) & 0xffu);
 }
 
